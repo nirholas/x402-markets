@@ -1,0 +1,845 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "x402-markets",
+    "version": "0.1.0",
+    "description": "Crypto prices via CoinGecko and SEC filings via EDGAR — real market data per lookup\n\nEvery paid route returns the purchased artifact in the 200 response body. Pay in USDC on Base or Solana — your client picks the rail.",
+    "license": {
+      "name": "Apache-2.0",
+      "identifier": "Apache-2.0"
+    },
+    "contact": {
+      "name": "nirholas",
+      "email": "nichxbt@gmail.com",
+      "url": "https://github.com/nirholas/x402-markets"
+    },
+    "x-guidance": "Crypto prices via CoinGecko and SEC filings via EDGAR — real market data per lookup. Every paid route answers an unpaid request with HTTP 402 and a list of accepted payments (USDC on Base or Solana — pick either), then returns the purchased artifact in the body of the same request once you retry with an X-PAYMENT header. Payment and delivery happen in one round trip; nothing is promised for later. GET /price/:coinId ($0.001) returns spot + 24h stats GET /filings/:ticker ($0.003) returns recent filings parsed (form, date, link, summary)"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:4023",
+      "description": "Local development"
+    },
+    {
+      "url": "{baseUrl}",
+      "description": "Deployed instance",
+      "variables": {
+        "baseUrl": {
+          "default": "http://localhost:4023"
+        }
+      }
+    }
+  ],
+  "externalDocs": {
+    "description": "Docs site",
+    "url": "https://nirholas.github.io/x402-markets/"
+  },
+  "tags": [
+    {
+      "name": "paid",
+      "description": "x402-paid routes. Artifact returned in the 200 body."
+    },
+    {
+      "name": "free",
+      "description": "Unpaid metadata routes."
+    }
+  ],
+  "paths": {
+    "/price/{coinId}": {
+      "get": {
+        "operationId": "price",
+        "summary": "Live crypto spot price and 24h statistics ($0.001)",
+        "description": "Live crypto spot price and 24h statistics\n\nPaid route — $0.001 in USDC. Pay on Base (EVM) or Solana; the 402 challenge lists both rails.",
+        "tags": [
+          "paid"
+        ],
+        "parameters": [
+          {
+            "name": "coinId",
+            "in": "path",
+            "required": true,
+            "description": "CoinGecko coin id (`bitcoin`, `usd-coin`, `avalanche-2`) or a common ticker shorthand (`btc`, `eth`, `sol`).",
+            "schema": {
+              "type": "string"
+            },
+            "example": "bitcoin"
+          },
+          {
+            "name": "vs",
+            "in": "query",
+            "required": false,
+            "description": "Quote currency. Default `usd`. Any CoinGecko-supported code — `eur`, `jpy`, `gbp`.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "usd"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Spot price, 1h/24h/7d change, 24h high–low range, volume, market cap, supply, and distance from all-time high and low",
+            "headers": {
+              "X-PAYMENT-RESPONSE": {
+                "description": "Base64 JSON settlement receipt.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "source",
+                    "id",
+                    "symbol",
+                    "name",
+                    "currency",
+                    "price",
+                    "retrievedAt"
+                  ],
+                  "properties": {
+                    "source": {
+                      "type": "string",
+                      "enum": [
+                        "coingecko"
+                      ]
+                    },
+                    "id": {
+                      "type": "string",
+                      "description": "Resolved CoinGecko id."
+                    },
+                    "symbol": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "price": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "marketCapRank": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    },
+                    "change": {
+                      "type": "object",
+                      "properties": {
+                        "pct1h": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        },
+                        "pct24h": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        },
+                        "pct7d": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        },
+                        "abs24h": {
+                          "type": [
+                            "number",
+                            "null"
+                          ],
+                          "description": "Absolute 24h move in the quote currency."
+                        }
+                      }
+                    },
+                    "range24h": {
+                      "type": "object",
+                      "properties": {
+                        "high": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        },
+                        "low": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        }
+                      }
+                    },
+                    "volume24h": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "marketCap": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "fullyDilutedValuation": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "supply": {
+                      "type": "object",
+                      "properties": {
+                        "circulating": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        },
+                        "total": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        },
+                        "max": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        }
+                      }
+                    },
+                    "allTimeHigh": {
+                      "type": "object",
+                      "properties": {
+                        "price": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        },
+                        "date": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "format": "date-time"
+                        },
+                        "changePct": {
+                          "type": [
+                            "number",
+                            "null"
+                          ],
+                          "description": "Percent below (negative) the all-time high."
+                        }
+                      }
+                    },
+                    "allTimeLow": {
+                      "type": "object",
+                      "properties": {
+                        "price": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        },
+                        "date": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "format": "date-time"
+                        },
+                        "changePct": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        }
+                      }
+                    },
+                    "lastUpdated": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "format": "date-time",
+                      "description": "CoinGecko's timestamp for the quote."
+                    },
+                    "retrievedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                },
+                "example": {
+                  "source": "coingecko",
+                  "id": "bitcoin",
+                  "symbol": "BTC",
+                  "name": "Bitcoin",
+                  "currency": "usd",
+                  "price": 64384,
+                  "marketCapRank": 1,
+                  "change": {
+                    "pct1h": 0.2,
+                    "pct24h": -0.3,
+                    "pct7d": -0.7,
+                    "abs24h": -75.5658198497913
+                  },
+                  "range24h": {
+                    "high": 64916,
+                    "low": 64114
+                  },
+                  "volume24h": 18458654525,
+                  "marketCap": 1291996236000,
+                  "fullyDilutedValuation": 1291996236000,
+                  "supply": {
+                    "circulating": 20066734,
+                    "total": 20066721,
+                    "max": 21000000
+                  },
+                  "allTimeHigh": {
+                    "price": 126080,
+                    "date": "2025-10-06T10:57:42.000Z",
+                    "changePct": -48.93369
+                  },
+                  "allTimeLow": {
+                    "price": 67.81,
+                    "date": "2013-07-05T16:00:00.000Z",
+                    "changePct": 94849.56131
+                  },
+                  "lastUpdated": "2026-08-07T02:52:20.000Z",
+                  "retrievedAt": "2026-08-07T02:52:23.481Z"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Payment required (or payment rejected). The body lists both accepted rails.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentRequired"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Upstream data source failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.001000"
+          },
+          "protocols": [
+            {
+              "x402": {}
+            }
+          ]
+        }
+      }
+    },
+    "/filings/{ticker}": {
+      "get": {
+        "operationId": "filings",
+        "summary": "Recent SEC EDGAR filings for a US-listed ticker, parsed and summarized ($0.003)",
+        "description": "Recent SEC EDGAR filings for a US-listed ticker, parsed and summarized\n\nPaid route — $0.003 in USDC. Pay on Base (EVM) or Solana; the 402 challenge lists both rails.",
+        "tags": [
+          "paid"
+        ],
+        "parameters": [
+          {
+            "name": "ticker",
+            "in": "path",
+            "required": true,
+            "description": "US-listed ticker symbol, e.g. `AAPL`, `NVDA`, `BRK.B`. Case-insensitive.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "AAPL"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Filings to return, 1–100. Default 20.",
+            "schema": {
+              "type": "integer"
+            },
+            "example": 5
+          },
+          {
+            "name": "forms",
+            "in": "query",
+            "required": false,
+            "description": "Comma-separated form types to keep, e.g. `10-K,10-Q,8-K`. Omit for every recent filing including Forms 3/4/5.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "10-K,10-Q,8-K"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Company identity (CIK, SIC, exchanges) plus recent filings with form, dates, direct document link, decoded 8-K items, and a plain-English summary",
+            "headers": {
+              "X-PAYMENT-RESPONSE": {
+                "description": "Base64 JSON settlement receipt.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "source",
+                    "ticker",
+                    "cik",
+                    "company",
+                    "count",
+                    "filings",
+                    "retrievedAt"
+                  ],
+                  "properties": {
+                    "source": {
+                      "type": "string",
+                      "enum": [
+                        "sec-edgar"
+                      ]
+                    },
+                    "ticker": {
+                      "type": "string"
+                    },
+                    "cik": {
+                      "type": "string",
+                      "description": "Zero-padded 10-digit SEC Central Index Key."
+                    },
+                    "company": {
+                      "type": "string"
+                    },
+                    "sic": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "sicDescription": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "exchanges": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "fiscalYearEnd": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "MMDD."
+                    },
+                    "formsFilter": {
+                      "type": [
+                        "array",
+                        "null"
+                      ],
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "count": {
+                      "type": "integer"
+                    },
+                    "filings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "form",
+                          "filingDate",
+                          "accessionNumber",
+                          "summary",
+                          "url"
+                        ],
+                        "properties": {
+                          "form": {
+                            "type": "string"
+                          },
+                          "filingDate": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "reportDate": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "format": "date"
+                          },
+                          "accessionNumber": {
+                            "type": "string"
+                          },
+                          "primaryDocument": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "items": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "SEC item codes, present on 8-Ks."
+                          },
+                          "summary": {
+                            "type": "string",
+                            "description": "Plain-English gloss of the form and its items."
+                          },
+                          "url": {
+                            "type": "string",
+                            "format": "uri",
+                            "description": "Direct link to the primary document."
+                          },
+                          "filingIndexUrl": {
+                            "type": "string",
+                            "format": "uri"
+                          },
+                          "sizeBytes": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ]
+                          },
+                          "isXBRL": {
+                            "type": "boolean"
+                          }
+                        }
+                      }
+                    },
+                    "retrievedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                },
+                "example": {
+                  "source": "sec-edgar",
+                  "ticker": "AAPL",
+                  "cik": "0000320193",
+                  "company": "Apple Inc.",
+                  "sic": "3571",
+                  "sicDescription": "Electronic Computers",
+                  "exchanges": [
+                    "Nasdaq"
+                  ],
+                  "fiscalYearEnd": "0927",
+                  "formsFilter": [
+                    "10-K",
+                    "10-Q",
+                    "8-K"
+                  ],
+                  "count": 2,
+                  "filings": [
+                    {
+                      "form": "10-Q",
+                      "filingDate": "2026-07-31",
+                      "reportDate": "2026-06-27",
+                      "accessionNumber": "0000320193-26-000020",
+                      "primaryDocument": "aapl-20260627.htm",
+                      "description": "10-Q",
+                      "items": [],
+                      "summary": "Apple Inc.: Quarterly report — unaudited financials and management discussion for the quarter.",
+                      "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000020/aapl-20260627.htm",
+                      "filingIndexUrl": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000020/0000320193-26-000020-index.htm",
+                      "sizeBytes": 5946811,
+                      "isXBRL": true
+                    },
+                    {
+                      "form": "8-K",
+                      "filingDate": "2026-07-30",
+                      "reportDate": "2026-07-30",
+                      "accessionNumber": "0000320193-26-000018",
+                      "primaryDocument": "aapl-20260730.htm",
+                      "description": "8-K",
+                      "items": [
+                        "2.02",
+                        "9.01"
+                      ],
+                      "summary": "Apple Inc.: Current report — a material event the company must disclose within four business days. Reported items: results of operations and financial condition; financial statements and exhibits.",
+                      "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000018/aapl-20260730.htm",
+                      "filingIndexUrl": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000018/0000320193-26-000018-index.htm",
+                      "sizeBytes": 417360,
+                      "isXBRL": true
+                    }
+                  ],
+                  "retrievedAt": "2026-08-07T02:53:11.204Z"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Payment required (or payment rejected). The body lists both accepted rails.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentRequired"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Upstream data source failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.003000"
+          },
+          "protocols": [
+            {
+              "x402": {}
+            }
+          ]
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "operationId": "serviceInfo",
+        "summary": "Service metadata, live prices, and active payment rails (free)",
+        "tags": [
+          "free"
+        ],
+        "responses": {
+          "200": {
+            "description": "Service metadata.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "health",
+        "summary": "Liveness probe (free)",
+        "tags": [
+          "free"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    },
+                    "uptime": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/.well-known/x402": {
+      "get": {
+        "operationId": "discoveryManifest",
+        "summary": "x402 discovery manifest (free)",
+        "tags": [
+          "free"
+        ],
+        "responses": {
+          "200": {
+            "description": "Manifest.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Machine-readable error code."
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable description."
+          }
+        }
+      },
+      "PaymentRequirements": {
+        "type": "object",
+        "description": "One accepted payment rail, per the x402 specification.",
+        "required": [
+          "scheme",
+          "network",
+          "maxAmountRequired",
+          "resource",
+          "payTo",
+          "asset"
+        ],
+        "properties": {
+          "scheme": {
+            "type": "string",
+            "enum": [
+              "exact"
+            ]
+          },
+          "network": {
+            "type": "string",
+            "enum": [
+              "base-sepolia",
+              "base",
+              "solana",
+              "solana-devnet"
+            ],
+            "description": "EVM or Solana network this rail settles on."
+          },
+          "maxAmountRequired": {
+            "type": "string",
+            "description": "Price in USDC base units (6 decimals)."
+          },
+          "resource": {
+            "type": "string",
+            "format": "uri"
+          },
+          "description": {
+            "type": "string"
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "payTo": {
+            "type": "string",
+            "description": "Receive address (0x… for EVM, base58 for Solana)."
+          },
+          "maxTimeoutSeconds": {
+            "type": "integer"
+          },
+          "asset": {
+            "type": "string",
+            "description": "USDC contract address or SPL mint."
+          },
+          "outputSchema": {
+            "type": "object"
+          },
+          "extra": {
+            "type": "object",
+            "description": "EVM: EIP-712 domain (`name`, `version`). Solana: `feePayer`, the sponsor that pays the SOL network fee."
+          }
+        }
+      },
+      "PaymentRequired": {
+        "type": "object",
+        "required": [
+          "x402Version",
+          "accepts"
+        ],
+        "properties": {
+          "x402Version": {
+            "type": "integer",
+            "enum": [
+              1
+            ]
+          },
+          "error": {
+            "type": "string"
+          },
+          "hint": {
+            "type": "string"
+          },
+          "accepts": {
+            "type": "array",
+            "description": "Both rails: USDC on Base and USDC on Solana.",
+            "items": {
+              "$ref": "#/components/schemas/PaymentRequirements"
+            }
+          }
+        }
+      }
+    }
+  }
+}
