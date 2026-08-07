@@ -18,6 +18,7 @@ import {
   usingSuiteDefaultPayTo,
   type RoutePrices,
 } from "./payments.js";
+import { ROUTE_SCHEMAS } from "./schemas.js";
 import {
   filings,
   NotFoundError,
@@ -37,29 +38,13 @@ const ROUTES: RoutePrices = {
     price: "$0.001",
     description:
       "Live crypto spot price and 24h statistics from CoinGecko — price, 1h/24h/7d change, 24h range, volume, market cap, supply, all-time high and low.",
-    outputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string" },
-        price: { type: "number" },
-        change: { type: "object" },
-        marketCap: { type: "number" },
-      },
-    },
+    outputSchema: ROUTE_SCHEMAS["GET /price/:coinId"],
   },
   "GET /filings/:ticker": {
     price: "$0.003",
     description:
       "Recent SEC EDGAR filings for a US-listed ticker, parsed into form, dates, direct document link, decoded 8-K items, and a plain-English summary.",
-    outputSchema: {
-      type: "object",
-      properties: {
-        ticker: { type: "string" },
-        company: { type: "string" },
-        count: { type: "integer" },
-        filings: { type: "array", items: { type: "object" } },
-      },
-    },
+    outputSchema: ROUTE_SCHEMAS["GET /filings/:ticker"],
   },
 };
 
@@ -89,11 +74,18 @@ app.get("/openapi.json", (_req, res) => {
   res.type("application/json").sendFile(join(root, "openapi.json"));
 });
 
-// Static site.
-app.use(express.static(publicDir));
+// Static site. `index: false` keeps `/` on the JSON handler below — the landing
+// page is served from there only when the caller actually asked for HTML.
+app.use(express.static(publicDir, { index: false }));
 
-// Free: service info.
-app.get("/", (_req, res) => {
+// Free: service info. Browsers and crawlers (Accept: text/html) get the landing
+// page with the origin's title/description/favicon metadata; agents and curl get
+// the JSON contract.
+app.get("/", (req, res) => {
+  if (req.accepts(["json", "html"]) === "html") {
+    res.sendFile(join(publicDir, "index.html"));
+    return;
+  }
   res.json({
     name: "x402-markets",
     description:

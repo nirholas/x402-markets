@@ -667,6 +667,7 @@
         "tags": [
           "free"
         ],
+        "security": [],
         "responses": {
           "200": {
             "description": "Service metadata.",
@@ -688,6 +689,7 @@
         "tags": [
           "free"
         ],
+        "security": [],
         "responses": {
           "200": {
             "description": "OK.",
@@ -717,6 +719,7 @@
         "tags": [
           "free"
         ],
+        "security": [],
         "responses": {
           "200": {
             "description": "Manifest.",
