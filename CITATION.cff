@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: If you use this software, please cite it as below.
+title: "x402-markets"
+abstract: "Crypto prices via CoinGecko and SEC filings via EDGAR: real market data per lookup, paid with x402: USDC on Base or Solana."
+license: Apache-2.0
+repository-code: "https://github.com/nirholas/x402-markets"
+url: "https://three.ws"
+authors:
+  - name: three.ws
+    website: "https://three.ws"
