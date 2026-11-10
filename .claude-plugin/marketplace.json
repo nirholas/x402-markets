@@ -1,0 +1,25 @@
+{
+  "name": "x402-markets",
+  "owner": {
+    "name": "nirholas"
+  },
+  "description": "Fetch live crypto prices from CoinGecko and SEC filings from EDGAR, paid per lookup in USDC via x402.",
+  "plugins": [
+    {
+      "name": "x402-markets",
+      "source": "./plugins/x402-markets",
+      "description": "Fetch live crypto prices from CoinGecko and SEC filings from EDGAR, paid per lookup in USDC via x402.",
+      "category": "finance",
+      "tags": [
+        "x402",
+        "usdc",
+        "solana",
+        "base",
+        "agentic-commerce",
+        "http-402",
+        "coingecko",
+        "sec-edgar"
+      ]
+    }
+  ]
+}

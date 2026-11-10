@@ -1,0 +1,21 @@
+{
+  "name": "x402-markets",
+  "version": "0.1.0",
+  "description": "Fetch live crypto prices from CoinGecko and SEC filings from EDGAR, paid per lookup in USDC via x402.",
+  "author": {
+    "name": "nirholas"
+  },
+  "repository": "https://github.com/nirholas/x402-markets",
+  "homepage": "https://nirholas.github.io/x402-markets/",
+  "license": "Apache-2.0",
+  "keywords": [
+    "x402",
+    "usdc",
+    "solana",
+    "base",
+    "agentic-commerce",
+    "http-402",
+    "coingecko",
+    "sec-edgar"
+  ]
+}
